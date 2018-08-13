@@ -1,39 +1,28 @@
-;;; init.el
 
-;;; Jayprasad Hegde
+;;;;
+;; Packages
+;;;;
 
-;;parenthesis
-(show-paren-mode t)
-
-;; for package.el
-;; add melpa to the the the packages
-;; https://github.com/melpa/melpa
-
-
-;; JH:
-;; ensure https support available by doing M-: (gnutlsp-available-p)
-;; if the result is nil, the https  will not be downloaded as HTTPS will not work
-;; grab either this or the openssl binaries here 
-
-;; Good alternative here: instead download the dependencies for emacs 25 from here to download the dlls
-;; http://alpha.gnu.org/gnu/emacs/pretest/windows/
-;; x86x64 version
-
-
+;; Define package repositories
 (require 'package)
 (add-to-list 'package-archives
-      '("melpa" . "https://www.mirrorservice.org/sites/melpa.org/packages/") t)
+             '("marmalade" . "http://marmalade-repo.org/packages/") t)
 (add-to-list 'package-archives
              '("tromey" . "http://tromey.com/elpa/") t)
 (add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/") t)
+             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+;; (add-to-list 'package-archives
+             ;; '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
-;; load and activate emacs packages. Set the load path
+;; (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+;;                          ("marmalade" . "http://marmalade-repo.org/packages/")
+;;                          ("melpa" . "http://melpa-stable.milkbox.net/packages/")))
+
+
+;; Load and activate emacs packages. Do this first so that the
+;; packages are loaded before you start trying to modify them.
+;; This also sets the load path.
 (package-initialize)
-
-
-;; custom modes and packages related to these modes
-
 
 ;; Download the ELPA archive description if needed.
 ;; This informs Emacs about the latest versions of all packages, and
@@ -49,10 +38,9 @@
 (defvar predicate nil)
 (defvar inherit-input-method nil)
 
-;; borrowed from braveclojure
 ;; The packages you want installed. You can also install these
 ;; manually with M-x package-install
-;; Add more packages here according to your preferences: 
+;; Add in your own as you wish:
 (defvar my-packages
   '(;; makes handling lisp expressions much, much easier
     ;; Cheatsheet: http://www.emacswiki.org/emacs/PareditCheatsheet
@@ -89,27 +77,33 @@
     tagedit
 
     ;; git integration
-    magit))
+    magit
+    
+    ;; auto-complete
+    auto-complete 
 
+    ;; go-mode
+    ;; go-mode
 
-;; install the package if not installed
+    ;;company-mode or auto-complete
+    ;; company-mode
+
+    ))
+
+;; On OS X, an Emacs instance started from the graphical user
+;; interface will have a different environment than a shell in a
+;; terminal window, because OS X does not run a shell during the
+;; login. Obviously this will lead to unexpected results when
+;; calling external utilities like make from Emacs.
+;; This library works around this problem by copying important
+;; environment variables from the user's shell.
+;; https://github.com/purcell/exec-path-from-shell
+(if (eq system-type 'darwin)
+    (add-to-list 'my-packages 'exec-path-from-shell))
+
 (dolist (p my-packages)
   (when (not (package-installed-p p))
     (package-install p)))
-
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages (quote (org-pdfview clojars web cider))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
 
 
 ;; Place downloaded elisp files in ~/.emacs.d/vendor. You'll then be able
@@ -123,12 +117,22 @@
 ;; 
 ;; Adding this code will make Emacs enter yaml mode whenever you open
 ;; a .yml file
-;; (add-to-list 'load-path "~/.emacs.d/vendor")
+(add-to-list 'load-path "~/.emacs.d/vendor")
+;; ^^ this will also take care of go-mode-load along with the other packages
 
+(require 'go-mode-load)
+(require 'go-autocomplete)
+(require 'auto-complete-config)
+(ac-config-default)
+
+;;;;
+;; Customization
+;;;;
 
 ;; Add a directory to our load path so that when you `load` things
 ;; below, Emacs knows where to look for the corresponding file.
 (add-to-list 'load-path "~/.emacs.d/customizations")
+
 
 ;; Sets up exec-path-from-shell so that Emacs will use the correct
 ;; environment variables
@@ -154,3 +158,47 @@
 ;; Langauage-specific
 (load "setup-clojure.el")
 (load "setup-js.el")
+;; (load "go-mode-load.el")
+
+
+;; (load "go-autocomplete.el")
+
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(coffee-tab-width 2)
+ '(package-selected-packages
+   (quote
+    (flymake-go go-mode auto-complete auctex tagedit smex rainbow-delimiters projectile paredit magit ido-ubiquitous exec-path-from-shell clojure-mode-extra-font-locking cider))))
+
+;; go-autocomplete auto-complete-config
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+
+;; either to use auto-complete or company
+
+
+
+;; Go-autocomplete related code
+;; (require 'go-autocomplete)
+;; (require 'auto-complete-config)
+;; (ac-config-default)
+
+
+;; JH: go-doc: to auto-format on every C-x C-s
+(add-hook 'before-save-hook 'gofmt-before-save)
+
+
+
+
+
